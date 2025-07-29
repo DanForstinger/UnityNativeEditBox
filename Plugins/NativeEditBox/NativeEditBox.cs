@@ -28,6 +28,8 @@ public partial class NativeEditBox : MonoBehaviour
 		TextAnchorLowerRight
 	};
 
+	public bool isFocused => inputField.isFocused;
+	
 	public delegate void OnEventHandler();
 	public delegate void OnTextChangedHandler(string text);
 	public delegate void OnSubmitHandler(string text);

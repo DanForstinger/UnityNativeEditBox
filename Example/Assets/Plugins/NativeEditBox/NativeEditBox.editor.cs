@@ -1,94 +1,104 @@
 ﻿#if UNITY_EDITOR
 // #if false
 
+#region
+
+using TMPro;
 using UnityEngine;
+
+#endregion
 
 public partial class NativeEditBox
 {
-	#region Public Methods
+    private void AwakeNative()
+    {
+        inputField.onEndEdit.AddListener(OnEndEdit);
+        inputField.onValueChanged.AddListener(OnValueChanged);
+    }
 
-	public static bool IsKeyboardSupported()
-	{
-		return false;
-	}
+    private void OnValueChanged(string text)
+    {
+        OnTextChanged?.Invoke(text);
+    }
 
-	public void SetText(string text)
-	{
-		inputField.text = text;
-	}
+    private void OnEndEdit(string text)
+    {
+        if (Input.GetKey(KeyCode.KeypadEnter) || Input.GetKey(KeyCode.Return))
+            OnSubmit?.Invoke(inputField.text);
 
-	public void SelectRange(int from, int to)
-	{
-		inputField.selectionAnchorPosition = from;
-		inputField.selectionFocusPosition = to;
-	}
+        OnDidEnd?.Invoke();
+        OnTapOutside?.Invoke();
+    }
 
-	public void SetPlacement(int left, int top, int right, int bottom)
-	{
-		//Do nothing
-	}
+    #region Public Methods
 
-	public void ActivateInputField()
-	{
-		inputField.ActivateInputField();
-	}
+    public static bool IsKeyboardSupported()
+    {
+        return false;
+    }
 
-	public void DestroyNative()
-	{
-		//Do nothing
-	}
+    public void SetPlaceholder(string text)
+    {
+        inputField.placeholder.GetComponent<TextMeshProUGUI>().text = text;
+    }
 
-	public string text
-	{
-		set => SetText(value);
-		get => inputField.text;
-	}
+    public void SetText(string text)
+    {
+        inputField.text = text;
+    }
 
-	#endregion
+    public void SelectRange(int from, int to)
+    {
+        inputField.selectionAnchorPosition = from;
+        inputField.selectionFocusPosition = to;
+    }
 
-	void AwakeNative()
-	{
-		inputField.onEndEdit.AddListener(OnEndEdit);
-		inputField.onValueChanged.AddListener(OnValueChanged);
-	}
+    public void SetPlacement(int left, int top, int right, int bottom)
+    {
+        //Do nothing
+    }
 
-	void OnValueChanged(string text)
-	{
-		OnTextChanged?.Invoke(text);
-	}
+    public void ActivateInputField()
+    {
+        inputField.ActivateInputField();
+    }
 
-	void OnEndEdit(string text)
-	{
-		if (Input.GetKey(KeyCode.KeypadEnter) || Input.GetKey(KeyCode.Return))
-			OnSubmit?.Invoke(inputField.text);
+    public void DestroyNative()
+    {
+        //Do nothing
+    }
 
-		OnDidEnd?.Invoke();
-		OnTapOutside?.Invoke();
-	}
+    public string text
+    {
+        set => SetText(value);
+        get => inputField.text;
+    }
 
-	#region BAD FOCUS CHECK
+    #endregion
 
-	bool isFocused = false;
+    #region BAD FOCUS CHECK
 
-	void UpdateNative()
-	{
-		bool focus = inputField.isFocused;
+    private bool wasFocused;
 
-		if (focus != isFocused)
-		{
-			isFocused = focus;
+    private void UpdateNative()
+    {
+        var focus = inputField.isFocused;
 
-			if (focus)
-			{
-				OnGotFocus?.Invoke();
+        if (focus != wasFocused)
+        {
+            wasFocused = focus;
 
-				if (inputField.onFocusSelectAll)
-					SelectRange(0, inputField.text.Length);
-			}
-		}
-	}
+            if (focus)
+            {
+                OnGotFocus?.Invoke();
 
-	#endregion
+                if (inputField.onFocusSelectAll)
+                    SelectRange(0, inputField.text.Length);
+            }
+        }
+    }
+
+    #endregion
 }
 
 #endif

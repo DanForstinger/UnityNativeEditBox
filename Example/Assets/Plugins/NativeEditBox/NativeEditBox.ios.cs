@@ -105,6 +105,13 @@ public partial class NativeEditBox : IPointerClickHandler
 		StartCoroutine(CreateNow(true));
 	}
 
+	public void SetPlaceholder(string text)
+	{
+		TMP_Text placeholder = inputField.placeholder as TMP_Text;
+
+		_CNativeEditBox_SetPlaceholder(editBox, text, placeholder.color.r, placeholder.color.g, placeholder.color.b, placeholder.color.a);
+	}
+
 	public void DestroyNative()
 	{
 		DestroyNow();
@@ -148,7 +155,6 @@ public partial class NativeEditBox : IPointerClickHandler
 
 	void UpdateNative()
 	{
-
 	}
 
 	IEnumerator CreateNow(bool doFocus)
@@ -186,6 +192,21 @@ public partial class NativeEditBox : IPointerClickHandler
 	}
 
 	#endregion
+
+	int ComputeIosFontSizePoints(TMP_Text tmp)
+	{
+		var pointSize = tmp.fontSize; // TMP returns point size (1/72")
+		var scale = 1f;
+
+		// Include Canvas Scaler scaling (Scale With Screen Size, Constant Pixel Size, etc.)
+		var canvas = tmp.canvas;
+		if (canvas != null)
+			scale *= canvas.scaleFactor;
+
+		// UIKit expects logical points. This value should be used directly for UIFont.ofSize.
+		var iosPoints = Mathf.Max(1, Mathf.RoundToInt(pointSize * scale));
+		return iosPoints;
+	}
 
 	void SetupInputField()
 	{
@@ -226,7 +247,9 @@ public partial class NativeEditBox : IPointerClickHandler
 
 		UpdatePlacementNow();
 
-		_CNativeEditBox_SetFontSize(editBox, Mathf.RoundToInt(text.fontSize * text.pixelsPerUnit));
+		var fontSize = ComputeIosFontSizePoints(text);
+
+		_CNativeEditBox_SetFontSize(editBox, fontSize);
 		_CNativeEditBox_SetFontColor(editBox, text.color.r, text.color.g, text.color.b, text.color.a);
 		_CNativeEditBox_SetPlaceholder(editBox, placeholder.text, placeholder.color.r, placeholder.color.g, placeholder.color.b, placeholder.color.a);
 		_CNativeEditBox_SetTextAlignment(editBox, (int)alignment);
@@ -241,6 +264,7 @@ public partial class NativeEditBox : IPointerClickHandler
 	#region CALLBACKS
 
 	delegate void DelegateWithText(int instanceId, string text);
+
 	delegate void DelegateEmpty(int instanceId);
 
 	[MonoPInvokeCallback(typeof(DelegateWithText))]
